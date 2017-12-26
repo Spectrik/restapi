@@ -1,0 +1,3 @@
+Finish login class
+Implement cookies
+User management - static list of users of database?

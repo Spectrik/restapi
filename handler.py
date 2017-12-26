@@ -3,10 +3,14 @@ from login import Login
 import urllib
 
 class WebApiHandler(BaseHTTPRequestHandler):
-    "Handler class for user GET requests"
+    "Handler class for handling user requests"
 
     def sendMessage(self, message, returncode, headers=None):
-        'Send message to client'
+        """
+        Send message to client (str)
+        HTTP headers (list) = (name of the header, header value)
+        Return code (int) = HTTP response code
+        """
 
         if not isinstance(returncode, (int)):
             print("HTTP return code has to be an integer")
@@ -16,42 +20,43 @@ class WebApiHandler(BaseHTTPRequestHandler):
             print("Message has to be a string")
             return False
 
+        # Send HTTP response code
         self.send_response(returncode)
+
+        # Add headers
         self.send_header("Content-type", "text/html")
+        
+        if headers:
+            for header in headers:
+                self.send_header(header[0], header[1])
+
         self.end_headers()
-        self.wfile.write("<html><head><title>REST API</title></head>")
-        self.wfile.write("<body><p>" + message +"</p>")
-        self.wfile.write("</body></html>")
+
+        # Send message body
+        self.wfile.write(bytes(message, "utf8"))
     
-    def do_GET(self):
+    def do_GET(self):   
         "Process GET requests"
 
-        # Send response status code
-        self.send_response(200)
-
-        # Send headers
-        self.send_header('Content-type', 'text/html')
-        self.end_headers()
-
-        # Send message back to client
-        message = "Hello world!"    
-
-        # Write content as utf-8 data
-        self.wfile.write(bytes(message, "utf8"))
-
+        self.sendMessage("Hello world!", 200)
         return
 
     def do_POST(self):
         "Process POST requests"
 
-        # List of allowed urls for user to use
-        allowedUrls = ["/login"]
+        self.allowedUrls = ["/login"]
+
+        # Create login class
+        login = Login()
 
         # Is the request path in allowed list?
-        if self.path in allowedUrls:
+        if self.path in self.allowedUrls:
 
             # User is trying to log in?
             if self.path == "/login":
+
+                # Delete this:
+                self.sendMessage(login.isLoggedIn(), 200)
 
                 # Get POSTed data
                 length = int(self.headers['Content-Length'])
@@ -61,19 +66,23 @@ class WebApiHandler(BaseHTTPRequestHandler):
                 try:
                     credentials = (post_data["username"][0], post_data["password"][0])
                 except KeyError:
-                    print("No credentials provided!")
+                    self.sendMessage("No credentials provided!", 403)
                     return
 
                 # Start the login process
-                login = Login(credentials)
+                login.setCredentials(credentials)
+                login.setUserFile("/root/webapi/users.txt")
 
+                # Try to log in
                 if not login.login():
                     self.sendMessage("Failed to log in!", 403)
+                    return
+                
+                cookie = login.login()
+                self.sendMessage("Logged in!", 200, headers=[cookie])
+
+                return
         else:
-            # GTFO
-            self.send_response(403)
-            self.send_header('Content-type', 'text/html')
-            self.end_headers()
-            self.wfile.write(bytes("Forbidden, biatch!", "utf8"))
+            self.sendMessage("Forbidden, biatch!", 403)
 
         return

@@ -1,3 +1,4 @@
 Finish login class
 Implement cookies
+Save passwords hashed
 User management - static list of users of database?

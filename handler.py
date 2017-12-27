@@ -1,5 +1,6 @@
 from http.server import BaseHTTPRequestHandler
 from login import Login
+from cookie import Cookie
 import urllib
 
 class WebApiHandler(BaseHTTPRequestHandler):
@@ -25,18 +26,34 @@ class WebApiHandler(BaseHTTPRequestHandler):
 
         # Add headers
         self.send_header("Content-type", "text/html")
-        
+
         if headers:
             for header in headers:
-                self.send_header(header[0], header[1])
+                if header:
+                    self.send_header(header[0], header[1])
 
         self.end_headers()
 
         # Send message body
         self.wfile.write(bytes(message, "utf8"))
-    
-    def do_GET(self):   
+
+    def do_GET(self):
         "Process GET requests"
+
+        self.allowedUrls = ["/logout"]
+
+        # Is the request path in allowed list?
+        if self.path in self.allowedUrls:
+
+            # User is trying to log out?
+            if self.path == "/logout":
+                login = Login()
+
+                if login.isLoggedIn(self.headers.get("Cookie")):
+                    if not login.logout():
+                        print("Error: could not log out!")
+                        return
+                    return
 
         self.sendMessage("Hello world!", 200)
         return
@@ -54,9 +71,6 @@ class WebApiHandler(BaseHTTPRequestHandler):
 
             # User is trying to log in?
             if self.path == "/login":
-
-                # Delete this:
-                self.sendMessage(login.isLoggedIn(), 200)
 
                 # Get POSTed data
                 length = int(self.headers['Content-Length'])
@@ -77,9 +91,9 @@ class WebApiHandler(BaseHTTPRequestHandler):
                 if not login.login():
                     self.sendMessage("Failed to log in!", 403)
                     return
-                
-                cookie = login.login()
-                self.sendMessage("Logged in!", 200, headers=[cookie])
+
+                logincookie = login.login()
+                self.sendMessage("Logged in!", 200, headers=[logincookie])
 
                 return
         else:

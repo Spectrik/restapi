@@ -60,14 +60,26 @@ class Login():
 
         return False
 
-    def isLoggedIn(self):
+    # Fix this method if user sends more cookies. Make it more secure as well
+    def isLoggedIn(self, cookie):
         "Is user logged in?"
 
-        if "HTTP_COOKIE" in os.environ:
-            return os.environ["HTTP_COOKIE"]
-        else:
-            return "HTTP_COOKIE not set!"
+        # Go through all of the cookies returned by cliend and check for the correct one
+        try:
+            returnedcookies = cookie.split(";")
+        except Exception as e:
+            print("Error has occured: ", str(e))
+            return False
 
+        for returnedcookie in returnedcookies:
+
+            returnedcookie = returnedcookie.split("=")
+            key, value = returnedcookie
+
+            if key == "logged" and value == "yes":
+                return True
+
+        return False
 
     def logout(self):
         "Logout process"

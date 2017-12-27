@@ -50,9 +50,9 @@ class WebApiHandler(BaseHTTPRequestHandler):
                 login = Login()
 
                 if login.isLoggedIn(self.headers.get("Cookie")):
-                    if not login.logout():
-                        print("Error: could not log out!")
-                        return
+                    return self.sendMessage("Logout.", 200, headers=[login.logout()])
+                else:
+                    self.sendMessage("User not logged in!", 403)
                     return
 
         self.sendMessage("Hello world!", 200)

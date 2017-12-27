@@ -75,12 +75,23 @@ class Login():
 
             returnedcookie = returnedcookie.split("=")
             key, value = returnedcookie
+            
+            # Remove whitespaces
+            key = key.replace(" ", "")
+            value = value.replace(" ", "")
 
+            # Check for correct cookie
             if key == "logged" and value == "yes":
                 return True
 
         return False
 
     def logout(self):
-        "Logout process"
-        return False
+        """
+        Logout process
+        Returns a login cookie with negative expire value, so it gets
+        deleted on client side
+        """
+
+        logoutcookie = Cookie().create_custom("logged", "no", -10)
+        return logoutcookie

@@ -1,4 +1,4 @@
 Finish login class
-Implement cookies
+Implement cookies, Improve cookie security
 Save passwords hashed
 User management - static list of users of database?
